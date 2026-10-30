@@ -1,9 +1,14 @@
 import streamlit as st
 import asyncio
+import os
+
+# Auto-install Playwright browser binaries on Streamlit Cloud server
+os.system("playwright install chromium")
+
 from playwright.async_api import async_playwright
 
 st.set_page_config(
-    page_title="Qureo Local Course Runner",
+    page_title="Qureo Cloud Course Runner",
     page_icon="⚡",
     layout="centered"
 )
@@ -16,11 +21,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 class='main-title'>⚡ Qureo Course Runner</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>Local Automation Dashboard for 42 Modules</p>", unsafe_allow_html=True)
-
-with st.infoline if hasattr(st, 'infoline') else st.container():
-    st.info("💡 **Note:** This app runs locally via Playwright to automate your browser and complete the Qureo modules.")
+st.markdown("<h1 class='main-title'>⚡ Qureo Cloud Runner</h1>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>Web Automation Dashboard for 42 Modules</p>", unsafe_allow_html=True)
 
 with st.form("credentials_form"):
     st.subheader("🔑 تسجيل الدخول")
@@ -44,13 +46,13 @@ if submitted:
 
         async def run_automation():
             async with async_playwright() as p:
-                # Launches browser locally on your machine
-                browser = await p.chromium.launch(headless=False)
+                # headless=True is mandatory for cloud servers
+                browser = await p.chromium.launch(headless=True)
                 context = await browser.new_context()
                 page = await context.new_page()
 
                 try:
-                    log_message("🔄 Opening Qureo portal...")
+                    log_message("🔄 Opening Qureo portal on cloud server...")
                     await page.goto("https://me-portal.qureo.education/login", timeout=60000)
 
                     log_message("🔑 Entering credentials...")
@@ -65,7 +67,6 @@ if submitted:
                         progress_bar.progress(level_num / 42)
                         log_message(f"🚀 Processing Level {level_num}/42...")
 
-                        # Automation steps loop
                         while await page.locator("button:has-text('التالي'), button:has-text('Next')").is_visible():
                             await page.click("button:has-text('التالي'), button:has-text('Next')")
                             await page.wait_for_timeout(300)
