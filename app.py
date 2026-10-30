@@ -56,9 +56,20 @@ if submitted:
                     await page.goto("https://me-portal.qureo.education/login", timeout=60000)
 
                     log_message("🔑 Entering credentials...")
-                    await page.fill("input[type='text'], input[name='loginId'], input[name='username']", student_id)
-                    await page.fill("input[type='password']", password)
-                    await page.click("button[type='submit']")
+                    # Wait for input fields to render properly
+                    await page.wait_for_selector("input", timeout=15000)
+                    
+                    # Robust selector fallback using input index positions
+                    inputs = await page.locator("input").all()
+                    if len(inputs) >= 2:
+                        await inputs[0].fill(student_id)
+                        await inputs[1].fill(password)
+                    else:
+                        await page.fill("input[type='text'], input[type='email'], input:not([type='password'])", student_id)
+                        await page.fill("input[type='password']", password)
+
+                    # Submit login form
+                    await page.click("button[type='submit'], button:has-text('دخول'), button:has-text('Login')")
                     await page.wait_for_load_state("networkidle")
 
                     log_message("✅ Logged in successfully! Starting modules...")
